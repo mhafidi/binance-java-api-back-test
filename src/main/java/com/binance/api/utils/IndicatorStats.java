@@ -5,10 +5,7 @@ import com.binance.api.client.BinanceApiRestClient;
 import com.binance.api.client.domain.market.Candlestick;
 import com.binance.api.client.domain.market.CandlestickInterval;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -54,12 +51,10 @@ public class IndicatorStats {
 
         }
 
-      /*  DateFormat obj = new SimpleDateFormat("dd MMM yyyy HH:mm:ss:SSS Z");
-        Date res = new Date(start);
-        System.out.println(obj.format(res));
-
-        res = new Date(latestLast);
-        System.out.println(obj.format(res));*/
         return fullHistoryCandleSticks;
+    }
+    public static boolean isADownTrendCandleStick(Candlestick candlestick)
+    {
+        return Double.parseDouble(candlestick.getClose())<Double.parseDouble(candlestick.getOpen());
     }
 }
