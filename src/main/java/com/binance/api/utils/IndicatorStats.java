@@ -5,7 +5,10 @@ import com.binance.api.client.BinanceApiRestClient;
 import com.binance.api.client.domain.market.Candlestick;
 import com.binance.api.client.domain.market.CandlestickInterval;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -56,5 +59,41 @@ public class IndicatorStats {
     public static boolean isADownTrendCandleStick(Candlestick candlestick)
     {
         return Double.parseDouble(candlestick.getClose())<Double.parseDouble(candlestick.getOpen());
+    }
+
+    //date example "12-October-2017"
+    public static List<Candlestick> pullAllCandleStickHistoryStartingFrom(String assetPair, CandlestickInterval candlestickInterval,String date)
+    {
+
+        List<Candlestick> fullHistoryCandleSticks = new ArrayList<>();
+        List<Candlestick> candlesticks_last = client.getCandlestickBars(assetPair, candlestickInterval,1,null,null);
+        Long milliseconds =null;
+
+        SimpleDateFormat f = new SimpleDateFormat("dd-MMM-yyyy");
+        try {
+            Date d = f.parse(date);
+            milliseconds = d.getTime();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        Long last=milliseconds;
+        Long latestLast=candlesticks_last.get(0).getCloseTime();
+        //Long last;
+        List<Candlestick> candlesticks ;//= client.getCandlestickBars(assetPair, candlestickInterval,null,start,null);
+        boolean finishedPull=false;
+
+        while(!finishedPull)
+        {
+            candlesticks = client.getCandlestickBars(assetPair, candlestickInterval,null,last,null);
+            fullHistoryCandleSticks.addAll(candlesticks);
+            last=fullHistoryCandleSticks.get(fullHistoryCandleSticks.size()-1).getCloseTime();
+            candlesticks_last = client.getCandlestickBars(assetPair, candlestickInterval,1,null,null);
+            latestLast=candlesticks_last.get(0).getCloseTime();
+            finishedPull=(last.equals(latestLast));
+
+
+        }
+
+        return fullHistoryCandleSticks;
     }
 }
