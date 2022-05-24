@@ -6,7 +6,7 @@ public class PivotPoints {
 
     public double r1;
     public  double r2;
-    public double r3,s1;
+    public double r3,s1,s2;
     public double pivot;
     public PivotPoints(Candlestick candlestick)
     {
@@ -15,6 +15,7 @@ public class PivotPoints {
         r2=pivot+(Double.parseDouble(candlestick.getHigh())-Double.parseDouble(candlestick.getLow()));
         r3=Double.parseDouble(candlestick.getHigh())+2*(pivot-Double.parseDouble(candlestick.getLow()));
         s1=2*pivot-Double.parseDouble(candlestick.getHigh());
+        s2=pivot-(Double.parseDouble(candlestick.getHigh())-Double.parseDouble(candlestick.getLow()));
     }
 
     public double getR1() {

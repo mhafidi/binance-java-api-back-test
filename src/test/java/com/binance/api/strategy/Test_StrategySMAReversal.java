@@ -24,7 +24,7 @@ public class Test_StrategySMAReversal
         Candlestick lastCandlestick=null;
 
 
-        List<Candlestick> candlesticks = IndicatorStats.pullAllCandleStickHistory("BTCUSDT",CandlestickInterval.HOURLY);// client.getCandlestickBars("BTCUSDT", CandlestickInterval.HOURLY,1000,null,null);
+        List<Candlestick> candlesticks = IndicatorStats.pullAllCandleStickHistoryStartingFrom("ETHUSDT",CandlestickInterval.HOURLY,"21-November-2016");// client.getCandlestickBars("BTCUSDT", CandlestickInterval.HOURLY,1000,null,null);
         System.out.println("Number of CandleSticks of the sample: "+candlesticks.size());
         HashMap<String,Double> sma30 = IndicatorStats.sma_period(candlesticks,30);
         HashMap<String,Double> sma60 = IndicatorStats.sma_period(candlesticks,60);

@@ -13,7 +13,7 @@ import java.util.List;
 
 import static com.binance.api.utils.IndicatorStats.isADownTrendCandleStick;
 
-public class Test_Strategy_BullishEngulfing_enhanced
+public class Test_Strategy_BullishEngulfing_enhanced_v1
 {
     final double FEE_RATE=0.1/100;
     BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance();
@@ -53,98 +53,100 @@ public class Test_Strategy_BullishEngulfing_enhanced
         System.out.println("Number of CandleSticks of the sample: "+candlesticks.size());
         HashMap<String,Double> sma30 = IndicatorStats.sma_period(candlesticks,30);
         int numberOfTotalPosition=0,numberOfProfitPosition=0,numberOfLosses=0;
-        double sellPrice,buyPrice;
+        double sellPrice;
         PivotPoints pivotPoints;
         String closeTime;
         double open,close;
-        for(int i=2;i<candlesticks.size();i++)
+        double openPrice=0.0,stopPrice=0.0,tPPrice=0.0;
+        Candlestick currentCandleStick;
+        int i=2,keep=0;
+        while(i<candlesticks.size())
         {
             pivotPoints = new PivotPoints(candlesticks.get(i-2));
             closeTime = candlesticks.get(i-1).getCloseTime().toString();
-
-            if(sma30.containsKey(closeTime) && Double.parseDouble(candlesticks.get(i-1).getClose())>sma30.get(closeTime))
+            currentCandleStick= candlesticks.get(i);
+            if(sma30.containsKey(closeTime) && Double.parseDouble(candlesticks.get(i-1).getClose())>sma30.get(closeTime) && quantityOfBoughtAsset==0.0)
             {
                 positionSize=agressive;
-                if  (
-                        isADownTrendCandleStick(candlesticks.get(i-3)) && Double.parseDouble(candlesticks.get(i-3).getClose())>Double.parseDouble(candlesticks.get(i-2).getOpen()) &&
+                if  (isADownTrendCandleStick(candlesticks.get(i-3)) && Double.parseDouble(candlesticks.get(i-3).getClose())>Double.parseDouble(candlesticks.get(i-2).getOpen()) &&
                         !isADownTrendCandleStick(candlesticks.get(i-1)) && isADownTrendCandleStick(candlesticks.get(i-2)) &&
                 Double.parseDouble(candlesticks.get(i-1).getClose())>Double.parseDouble(candlesticks.get(i-2).getOpen()) &&
                         Double.parseDouble(candlesticks.get(i-1).getOpen())<Double.parseDouble(candlesticks.get(i-2).getClose())
-                  && Double.parseDouble(candlesticks.get(i-1).getClose())>pivotPoints.r1)
+                  && Double.parseDouble(candlesticks.get(i-1).getClose())>pivotPoints.r2)
 
                 {
-                    //oneMinCandleSticks= client.getCandlestickBars(assetPair,CandlestickInterval.ONE_MINUTE,null,candlesticks.get(i).getOpenTime(),candlesticks.get(i).getCloseTime());
                     PivotPoints pivotPointsSell = new PivotPoints(candlesticks.get(i-1));
                     if(pivotPointsSell.s1>=Double.parseDouble(candlesticks.get(i).getLow()))
                     {
                         numberOfTotalPosition++;
-                        close = Double.parseDouble(candlesticks.get(i).getClose());
-
-
-                        buyPrice = pivotPointsSell.s1;
                         positionValue = positionSize * capital;
                         capital = capital - positionValue;
                         positionValue = positionValue - positionValue * FEE_RATE;
-                        quantityOfBoughtAsset = positionValue / buyPrice;
-                        sellPrice = close;
-                        if(pivotPointsSell.r1<=Double.parseDouble(candlesticks.get(i).getHigh()))
-                            sellPrice=pivotPointsSell.r1;
+                        openPrice = pivotPointsSell.s1;
+                        quantityOfBoughtAsset = positionValue / openPrice;
+                        stopPrice = new PivotPoints(candlesticks.get(i - 1)).s2;//TODO optimize the stop price to avoid a quick stop
+                        tPPrice = new PivotPoints(candlesticks.get(i - 1)).r2;
+                    }
 
 
+                }
 
-                        if (buyPrice < sellPrice)
-                            numberOfProfitPosition++;
-                        else
-                            numberOfLosses++;
-                        quantityOfBoughtAsset = quantityOfBoughtAsset - quantityOfBoughtAsset * FEE_RATE;
-                        capital = capital + quantityOfBoughtAsset * sellPrice;
+            }
+            if(quantityOfBoughtAsset!=0.0)
+            {
+                if(stopPrice>=Double.parseDouble(currentCandleStick.getClose()))
+                {
+                    quantityOfBoughtAsset=quantityOfBoughtAsset-quantityOfBoughtAsset*FEE_RATE;
+                    capital=capital+quantityOfBoughtAsset*Double.parseDouble(currentCandleStick.getClose());
+                    if(Double.parseDouble(currentCandleStick.getClose())<openPrice)
+                        numberOfLosses++;
+                    else
+                        numberOfProfitPosition++;
+
+                    openPrice=0.0;
+                    stopPrice=0.0;
+                    quantityOfBoughtAsset=0.0;
+                    keep=0;
+                }
+                else if(tPPrice<=Double.parseDouble(currentCandleStick.getClose()))
+                {
+                    quantityOfBoughtAsset=quantityOfBoughtAsset-quantityOfBoughtAsset*FEE_RATE;
+                    capital=capital+quantityOfBoughtAsset*Double.parseDouble(currentCandleStick.getClose());
+                    if(Double.parseDouble(currentCandleStick.getClose())<openPrice)
+                        numberOfLosses++;
+                    else
+                        numberOfProfitPosition++;
+
+                    openPrice=0.0;
+                    stopPrice=0.0;
+                    quantityOfBoughtAsset=0.0;
+                    keep=0;
+                }
+                else
+                {
+//                    System.out.println("keep position openned price ["+openPrice+"]");
+//                    System.out.println("current price ["+currentCandleStick.getClose()+"]");
+                    keep++;
+                    if(Math.floorMod(keep,2)==0) {
+                        stopPrice = new PivotPoints(currentCandleStick).s1;
+                        tPPrice = new PivotPoints(currentCandleStick).r1;
+                    }
+                    else if(keep>2)
+                    {
+                        System.out.println("keeped["+keep+"] openPrice["+openPrice+"] " +
+                                "closing price["+currentCandleStick.getClose()+"]");
+                        stopPrice = new PivotPoints(currentCandleStick).pivot;
+                        tPPrice = new PivotPoints(currentCandleStick).r1;
+                        System.out.println("TP["+tPPrice+"] SL["+stopPrice+"]");
                     }
                 }
 
             }
-//            else
-//            {
-//                positionSize=defensive;
-//                if  (/*Double.parseDouble(candlesticks.get(i-1).getClose())>sma30.get(closeTime) &&*/
-//                        !isADownTrendCandleStick(candlesticks.get(i-1)) && isADownTrendCandleStick(candlesticks.get(i-2)) &&
-//                                // Double.parseDouble(candlesticks.get(i).getOpen())>sma30.get(closeTime) &&
-//                                Double.parseDouble(candlesticks.get(i-1).getClose())>Double.parseDouble(candlesticks.get(i-2).getOpen()) &&
-//                                Double.parseDouble(candlesticks.get(i-1).getOpen())<Double.parseDouble(candlesticks.get(i-2).getClose()))
-//
-//                {
-//                    numberOfTotalPosition++;
-//
-//                    open = Double.parseDouble(candlesticks.get(i).getOpen());
-//                    close = Double.parseDouble(candlesticks.get(i).getClose());
-//                    PivotPoints pivotPointsSell = new PivotPoints(candlesticks.get(i));
-//                    positionValue=positionSize*capital;
-//                    capital=capital-positionValue;
-//                    positionValue=positionValue-positionValue*FEE_RATE;
-//                    quantityOfBoughtAsset=positionValue/open;
-//
-//
-//                    if(pivotPointsSell.r1<=Double.parseDouble(candlesticks.get(i).getHigh()))
-//                    {
-//                        sellPrice=pivotPointsSell.r1;
-//
-//                    }
-//                    else
-//                    {
-//                        sellPrice=close;
-//                    }
-//
-//                    if(open<sellPrice)
-//                        numberOfProfitPosition++;
-//                    else
-//                        numberOfLosses++;
-//                    quantityOfBoughtAsset=quantityOfBoughtAsset-quantityOfBoughtAsset*FEE_RATE;
-//                    capital=capital+quantityOfBoughtAsset*sellPrice;
-//                }
-//            }
+
+            i++;
 
         }
-
-
+        System.out.println("======================================");
         double rate= (capital-startingCapitalValue);
         rate= rate/startingCapitalValue;
         rate = 100.0*rate;
