@@ -18,6 +18,10 @@ public class Test_Strategy_BullishEngulfing_enhanced_v1
     final double FEE_RATE=0.1/100;
     BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance();
     BinanceApiRestClient client = factory.newRestClient();
+
+    int globalOpenedPositions=0;
+    int globalLostPositions=0;
+    int globalProfitPositions=0;
     @Test
     public void strategy_BullishEngulfing()
     {
@@ -38,6 +42,10 @@ public class Test_Strategy_BullishEngulfing_enhanced_v1
         System.out.println("Final capital: "+init*10);
         System.out.println("Final capital: "+capital);
 
+        System.out.println("Global Opened positions: "+globalOpenedPositions);
+        System.out.println("Global Lost positions: "+globalLostPositions);
+        System.out.println("Global Profit position: "+globalProfitPositions);
+
     }
 
     private double enhancedBullishEngulfing(String assetPair,double agressive,double defensive, double initialCapital)
@@ -51,7 +59,8 @@ public class Test_Strategy_BullishEngulfing_enhanced_v1
 
         List<Candlestick> candlesticks = IndicatorStats.pullAllCandleStickHistoryStartingFrom(assetPair, CandlestickInterval.HOURLY,"8-November-2015");// client.getCandlestickBars("BTCUSDT", CandlestickInterval.HOURLY,1000,null,null);
         System.out.println("Number of CandleSticks of the sample: "+candlesticks.size());
-        HashMap<String,Double> sma30 = IndicatorStats.sma_period(candlesticks,30);
+        HashMap<String,Double> sma50 = IndicatorStats.sma_period(candlesticks,50);
+        HashMap<String,Double> sma100 = IndicatorStats.sma_period(candlesticks,100);
         int numberOfTotalPosition=0,numberOfProfitPosition=0,numberOfLosses=0;
         double sellPrice;
         PivotPoints pivotPoints;
@@ -65,14 +74,15 @@ public class Test_Strategy_BullishEngulfing_enhanced_v1
             pivotPoints = new PivotPoints(candlesticks.get(i-2));
             closeTime = candlesticks.get(i-1).getCloseTime().toString();
             currentCandleStick= candlesticks.get(i);
-            if(sma30.containsKey(closeTime) && Double.parseDouble(candlesticks.get(i-1).getClose())>sma30.get(closeTime) && quantityOfBoughtAsset==0.0)
+            if(sma50.containsKey(closeTime) && sma100.containsKey(closeTime) && Double.parseDouble(candlesticks.get(i-1).getClose())>sma50.get(closeTime) && quantityOfBoughtAsset==0.0 &&
+                    sma50.get(closeTime)>sma100.get(closeTime))
             {
                 positionSize=agressive;
-                if  (isADownTrendCandleStick(candlesticks.get(i-3)) && Double.parseDouble(candlesticks.get(i-3).getClose())>Double.parseDouble(candlesticks.get(i-2).getOpen()) &&
+                if  (//isADownTrendCandleStick(candlesticks.get(i-3)) && Double.parseDouble(candlesticks.get(i-3).getClose())>Double.parseDouble(candlesticks.get(i-2).getOpen()) &&
                         !isADownTrendCandleStick(candlesticks.get(i-1)) && isADownTrendCandleStick(candlesticks.get(i-2)) &&
                 Double.parseDouble(candlesticks.get(i-1).getClose())>Double.parseDouble(candlesticks.get(i-2).getOpen()) &&
-                        Double.parseDouble(candlesticks.get(i-1).getOpen())<Double.parseDouble(candlesticks.get(i-2).getClose())
-                  && Double.parseDouble(candlesticks.get(i-1).getClose())>pivotPoints.r2)
+                        Double.parseDouble(candlesticks.get(i-1).getOpen())<Double.parseDouble(candlesticks.get(i-2).getClose())&&
+                        Double.parseDouble(candlesticks.get(i-1).getClose())>pivotPoints.r2 && Double.parseDouble(candlesticks.get(i-1).getLow())<sma50.get(closeTime))
 
                 {
                     PivotPoints pivotPointsSell = new PivotPoints(candlesticks.get(i-1));
@@ -84,7 +94,7 @@ public class Test_Strategy_BullishEngulfing_enhanced_v1
                         positionValue = positionValue - positionValue * FEE_RATE;
                         openPrice = pivotPointsSell.s1;
                         quantityOfBoughtAsset = positionValue / openPrice;
-                        stopPrice = new PivotPoints(candlesticks.get(i - 1)).s2;//TODO optimize the stop price to avoid a quick stop
+                        stopPrice = (Double.parseDouble(candlesticks.get(i - 1).getLow())+Double.parseDouble(candlesticks.get(i - 1).getHigh()))/2;//TODO optimize the stop price to avoid a quick stop
                         tPPrice = new PivotPoints(candlesticks.get(i - 1)).r2;
                     }
 
@@ -106,9 +116,8 @@ public class Test_Strategy_BullishEngulfing_enhanced_v1
                     openPrice=0.0;
                     stopPrice=0.0;
                     quantityOfBoughtAsset=0.0;
-                    keep=0;
                 }
-                else if(tPPrice<=Double.parseDouble(currentCandleStick.getClose()))
+                else if(tPPrice<=Double.parseDouble(currentCandleStick.getClose()) )
                 {
                     quantityOfBoughtAsset=quantityOfBoughtAsset-quantityOfBoughtAsset*FEE_RATE;
                     capital=capital+quantityOfBoughtAsset*Double.parseDouble(currentCandleStick.getClose());
@@ -120,25 +129,12 @@ public class Test_Strategy_BullishEngulfing_enhanced_v1
                     openPrice=0.0;
                     stopPrice=0.0;
                     quantityOfBoughtAsset=0.0;
-                    keep=0;
                 }
                 else
                 {
-//                    System.out.println("keep position openned price ["+openPrice+"]");
-//                    System.out.println("current price ["+currentCandleStick.getClose()+"]");
-                    keep++;
-                    if(Math.floorMod(keep,2)==0) {
-                        stopPrice = new PivotPoints(currentCandleStick).s1;
-                        tPPrice = new PivotPoints(currentCandleStick).r1;
-                    }
-                    else if(keep>2)
-                    {
-                        System.out.println("keeped["+keep+"] openPrice["+openPrice+"] " +
-                                "closing price["+currentCandleStick.getClose()+"]");
-                        stopPrice = new PivotPoints(currentCandleStick).pivot;
-                        tPPrice = new PivotPoints(currentCandleStick).r1;
-                        System.out.println("TP["+tPPrice+"] SL["+stopPrice+"]");
-                    }
+                    stopPrice = (Double.parseDouble(candlesticks.get(i).getLow())); //(Double.parseDouble(candlesticks.get(i).getLow())+Double.parseDouble(candlesticks.get(i).getHigh()))/2;
+                    tPPrice = new PivotPoints(currentCandleStick).r1;
+
                 }
 
             }
@@ -156,6 +152,10 @@ public class Test_Strategy_BullishEngulfing_enhanced_v1
         System.out.println("Number Of Open Positions ["+numberOfTotalPosition+"]\n" +
                 "Number Of Profitable Positions ["+numberOfProfitPosition+"]\n" +
                 "Number Of Lost Positions ["+numberOfLosses+"]");
+
+        globalOpenedPositions+=numberOfTotalPosition;
+        globalLostPositions+=numberOfLosses;
+        globalProfitPositions+=numberOfProfitPosition;
 
 
 
