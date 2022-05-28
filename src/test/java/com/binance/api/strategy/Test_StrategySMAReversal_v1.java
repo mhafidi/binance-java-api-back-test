@@ -30,15 +30,15 @@ public class Test_StrategySMAReversal_v1
     ArrayList<String> assetPairs = new ArrayList<String>() {
         {
             add("BTCUSDT");
-//            add("ETHUSDT");
-//            add("DOTUSDT");
-//            add("XRPUSDT");
-//            add("ADAUSDT");
-//            add("TRXUSDT");
-//            add("LTCUSDT");
-//            add("NEARUSDT");
-//            add("LINKUSDT");
-//            add("XLMUSDT");
+            add("ETHUSDT");
+            add("DOTUSDT");
+            add("XRPUSDT");
+            add("ADAUSDT");
+            add("TRXUSDT");
+            add("LTCUSDT");
+            add("NEARUSDT");
+            add("LINKUSDT");
+            add("XLMUSDT");
         }
     };
     
@@ -60,31 +60,33 @@ public class Test_StrategySMAReversal_v1
 
 
         ArrayList<StrategySMAReversal> runningTasks= new ArrayList<>();
+        long startedTime=System.currentTimeMillis();
+        long currentTIme;
+
         for(StrategySMAReversal strategySMAReversal:resStrategySMAReversals)
         {
             while(((ThreadPoolExecutor)mainThreadService).getActiveCount()>100 ||
                     runningTasks.parallelStream().filter(strategySMAReversal1 -> !strategySMAReversal1.isDone()).count()>50)
             {
-                System.out.println("waiting 10 s to lower the pressure");
-                System.out.println("the current running index is["+resStrategySMAReversals.indexOf(strategySMAReversal)+"]");
-                System.out.println("remaining tasks to start["+(resStrategySMAReversals.size()-resStrategySMAReversals.indexOf(strategySMAReversal))+"]");
-                Thread.sleep(10000);
+                currentTIme=System.currentTimeMillis();
+                if(Math.floorMod(((currentTIme-startedTime)/6000),5)==0)
+                {
+                    System.out.println("Spent Time in Executor Service ["+((currentTIme-startedTime)/60000)+" min]");
+                    System.out.println("the current running index is[" + resStrategySMAReversals.indexOf(strategySMAReversal) + "]");
+                    System.out.println("remaining tasks to start[" + (resStrategySMAReversals.size() - resStrategySMAReversals.indexOf(strategySMAReversal)) + "]");
+                }
+                Thread.sleep(1000);
             }
             runningTasks.add(strategySMAReversal);
             mainThreadService.submit(strategySMAReversal);
 
         }
-//        resStrategySMAReversals.parallelStream().
-//                forEach(strategySMAReversal -> mainThreadService.submit(strategySMAReversal));
         boolean notAllDone=false;
         System.out.println("all tasks started");
-        long numberOfDone;
         while(!notAllDone)
         {
             notAllDone=!resStrategySMAReversals.parallelStream().
                     anyMatch(strategySMAReversal -> !strategySMAReversal.isDone());
-
-            //numberOfDone=resStrategySMAReversals.parallelStream().filter(StrategySMAReversal::isDone).count();
 
         }
 
@@ -118,14 +120,8 @@ public class Test_StrategySMAReversal_v1
     {
         double capital,init=1000;
 
-        capital=candleStickLists.keySet().parallelStream().mapToDouble(pairs->sma_reversal(pairs,0.5,0.1,init,smaFast,smaSlow)).sum();
-//        System.out.println("======================================");
-//        System.out.println("Final capital: "+init*10);
-//        System.out.println("Final capital: "+capital);
-//
-//        System.out.println("Global Opened positions: "+globalOpenedPositions);
-//        System.out.println("Global Lost positions: "+globalLostPositions);
-//        System.out.println("Global Profit position: "+globalProfitPositions);
+        capital=candleStickLists.keySet().parallelStream().
+                mapToDouble(pairs->sma_reversal(pairs,0.5,0.1,init,smaFast,smaSlow)).sum();
         return capital;
 
     }
