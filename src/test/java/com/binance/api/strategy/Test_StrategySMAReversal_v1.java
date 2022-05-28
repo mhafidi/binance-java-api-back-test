@@ -30,38 +30,22 @@ public class Test_StrategySMAReversal_v1
     ArrayList<String> assetPairs = new ArrayList<String>() {
         {
             add("BTCUSDT");
-            add("ETHUSDT");
-            add("DOTUSDT");
-            add("XRPUSDT");
-            add("ADAUSDT");
-            add("TRXUSDT");
-            add("LTCUSDT");
-            add("NEARUSDT");
-            add("LINKUSDT");
-            add("XLMUSDT");
+//            add("ETHUSDT");
+//            add("DOTUSDT");
+//            add("XRPUSDT");
+//            add("ADAUSDT");
+//            add("TRXUSDT");
+//            add("LTCUSDT");
+//            add("NEARUSDT");
+//            add("LINKUSDT");
+//            add("XLMUSDT");
         }
     };
     
     @Test
     public void statistical_inspection() throws InterruptedException {
         initialization();
-        int smaFast=0,smaSlow=0;
-        double pnl=0.0,pnlTmp=0.0;
-//        Toto mm;
-//        IntStream.range(10,200).parallel().
-//                mapToObj(
-//                        index->IntStream.range(index+1,200).
-//                                mapToObj(index2->{
-//                    pnlTmp=strategy_SMA_reversal(index,index2);
-//                    if(pnlTmp>pnl)
-//                    {
-//                        pnl=pnlTmp;
-//                        smaFast=index;
-//                        smaSlow=index2;
-//                        mm = new Toto(smaFast,smaSlow,pnl);
-//                    }
-//                    return mm;
-//                    )).
+
 
         for(int i=10;i<300;i++)
         {
@@ -69,35 +53,26 @@ public class Test_StrategySMAReversal_v1
             {
                 StrategySMAReversal strategySMAReversal= new StrategySMAReversal(i,j,candleStickLists,assetPairs,1000.0);
                 resStrategySMAReversals.add(strategySMAReversal);
-               // mainThreadService.submit(strategySMAReversal);
 
-//
-//                pnlTmp=strategy_SMA_reversal(i,j);
-//                globalOpenedPositions =0;
-//                globalProfitPositions =0;
-//                globalLostPositions =0;
-//                if(pnlTmp>pnl)
-//                {
-//                    pnl=pnlTmp;
-//                    smaFast=i;
-//                    smaSlow=j;
-//                    System.out.println("*SMA Fast***["+smaFast+"] SMA Slow***["+smaSlow+"]*PNL     ***["+pnl+"]*");
-               // }
             }
         }
         System.out.println("start threads");
 
 
+        ArrayList<StrategySMAReversal> runningTasks= new ArrayList<>();
         for(StrategySMAReversal strategySMAReversal:resStrategySMAReversals)
         {
-            while(((ThreadPoolExecutor)mainThreadService).getActiveCount()>1000)
+            while(((ThreadPoolExecutor)mainThreadService).getActiveCount()>100 ||
+                    runningTasks.parallelStream().filter(strategySMAReversal1 -> !strategySMAReversal1.isDone()).count()>50)
             {
-                System.out.println("waiting 20 s to lower the pressure");
+                System.out.println("waiting 10 s to lower the pressure");
                 System.out.println("the current running index is["+resStrategySMAReversals.indexOf(strategySMAReversal)+"]");
                 System.out.println("remaining tasks to start["+(resStrategySMAReversals.size()-resStrategySMAReversals.indexOf(strategySMAReversal))+"]");
-                Thread.sleep(20000);
+                Thread.sleep(10000);
             }
+            runningTasks.add(strategySMAReversal);
             mainThreadService.submit(strategySMAReversal);
+
         }
 //        resStrategySMAReversals.parallelStream().
 //                forEach(strategySMAReversal -> mainThreadService.submit(strategySMAReversal));
@@ -132,7 +107,7 @@ public class Test_StrategySMAReversal_v1
         for(String assetPair:assetPairs)
         {
             System.out.println("====collecting data of the pair ["+assetPair+"]=========");
-            candlesticks = IndicatorStats.pullAllCandleStickHistoryStartingFrom(assetPair, CandlestickInterval.HOURLY, "21-November-2021");
+            candlesticks = IndicatorStats.pullAllCandleStickHistoryStartingFrom(assetPair, CandlestickInterval.HOURLY, "21-November-2009");
             candleStickLists.put(assetPair,candlesticks);
         }
 
