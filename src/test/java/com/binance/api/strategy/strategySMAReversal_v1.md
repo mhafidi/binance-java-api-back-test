@@ -111,9 +111,19 @@ Global Profit position: 35
 *SMA Slow***[33]****************
 *PNL     ***[9784.98289518736]********************
 
+
+
+
+## ====optimal sma's during the downtrend period from 21 November 2021 all cryptos
+NumberOfDoneTasks:41905
 *****************************************
-*SMA Fast***[29]****************
-*SMA Slow***[33]****************
-*PNL     ***[9784.222844197442]********************
+*SMA Fast ***[123]****************
+*SMA Slow ***[126]****************
+*PNL     ***[9147.282983301886]********************
 
 
+## ====optimal sma's during the full period for BTCUSDT
+
+*SMA Fast ***[104]****************
+*SMA Slow ***[115]****************
+*PNL     ***[6450.667248724923]********************
