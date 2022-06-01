@@ -29,16 +29,16 @@ public class Test_StrategySMAReversal_v1
     ConcurrentHashMap<String,List<Candlestick>> candleStickLists = new ConcurrentHashMap<>();
     ArrayList<String> assetPairs = new ArrayList<String>() {
         {
-            add("BTCUSDT");
+//            add("BTCUSDT");
             add("ETHUSDT");
-            add("DOTUSDT");
-            add("XRPUSDT");
-            add("ADAUSDT");
-            add("TRXUSDT");
-            add("LTCUSDT");
-            add("NEARUSDT");
-            add("LINKUSDT");
-            add("XLMUSDT");
+//            add("DOTUSDT");
+//            add("XRPUSDT");
+//            add("ADAUSDT");
+//            add("TRXUSDT");
+//            add("LTCUSDT");
+//            add("NEARUSDT");
+//            add("LINKUSDT");
+//            add("XLMUSDT");
         }
     };
     
