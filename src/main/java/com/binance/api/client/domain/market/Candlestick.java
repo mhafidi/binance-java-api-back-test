@@ -4,6 +4,9 @@ import com.binance.api.client.constant.BinanceApiConstants;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
@@ -126,18 +129,26 @@ public class Candlestick {
 
   @Override
   public String toString() {
-    return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
-        .append("openTime", openTime)
-        .append("open", open)
-        .append("high", high)
-        .append("low", low)
-        .append("close", close)
-        .append("volume", volume)
-        .append("closeTime", closeTime)
-        .append("quoteAssetVolume", quoteAssetVolume)
-        .append("numberOfTrades", numberOfTrades)
-        .append("takerBuyBaseAssetVolume", takerBuyBaseAssetVolume)
-        .append("takerBuyQuoteAssetVolume", takerBuyQuoteAssetVolume)
-        .toString();
+//    return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
+//        .append("", openTime)
+//        .append(",", open)
+//        .append(",", high)
+//        .append(",", low)
+//        .append(",", close)
+//        .append(",", volume)
+//        .append(",", closeTime)
+//        .append(",", quoteAssetVolume)
+//        .append(",", numberOfTrades)
+//        .append(",", takerBuyBaseAssetVolume)
+//        .append(",", takerBuyQuoteAssetVolume)
+//        .toString();
+    ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+    String json = null;
+    try {
+      json = ow.writeValueAsString(this);
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    }
+    return json;
   }
 }

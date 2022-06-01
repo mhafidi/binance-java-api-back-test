@@ -2,7 +2,7 @@ package com.binance.api.strategy;
 
 import com.binance.api.client.domain.market.Candlestick;
 import com.binance.api.client.domain.market.CandlestickInterval;
-import com.binance.api.utils.FileCandleStickWriter;
+import com.binance.api.utils.FileCandleSticksWriter;
 import com.binance.api.utils.IndicatorStats;
 import org.junit.Test;
 
@@ -47,11 +47,11 @@ public class DumpDataToFiles
 
     private void writeDataToFiles() {
 
-        FileCandleStickWriter fileCandleStickWriter;
+        FileCandleSticksWriter fileCandleSticksWriter;
         for(String assetPair:candleStickLists.keySet())
         {
-            fileCandleStickWriter = new FileCandleStickWriter(assetPair+".json",candleStickLists.get(assetPair));
-            fileCandleStickWriter.write();
+            fileCandleSticksWriter = new FileCandleSticksWriter(assetPair+".json",candleStickLists.get(assetPair));
+            fileCandleSticksWriter.write();
 
         }
     }

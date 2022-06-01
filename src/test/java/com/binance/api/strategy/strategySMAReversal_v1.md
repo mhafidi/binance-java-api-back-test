@@ -134,9 +134,7 @@ NumberOfDoneTasks:41905
 **NumberOfDoneTasks:** 41905
 
 **SMA Fast:** [124]
-
 **SMA Slow:** [290]
-
 **PNL:**      [21468.329417226196]
 
 
